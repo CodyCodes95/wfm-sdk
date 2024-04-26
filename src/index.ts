@@ -5,18 +5,21 @@ import { time } from "./api/time/time";
 
 type ApiConfig = {
   accountId: string;
-  accessToken?: string;
-  proxy?: string;
-  proxyHeaders?: Record<string, string>;
+  getAccessToken: () => Promise<string>;
 };
 
 export const createWfmApi = (config: ApiConfig) => {
   const wfmApi = axios.create({
-    baseURL: `${config.proxy || ""}/https://api.workflowmax2.com/`,
+    baseURL: `/https://api.workflowmax2.com/`,
     headers: {
       account_id: config.accountId,
-      Authorization: `Bearer ${config.accessToken}`,
     },
+  });
+
+  wfmApi.interceptors.request.use(async (axiosConfig) => {
+    const accessToken = await config.getAccessToken();
+    axiosConfig.headers.Authorization = `Bearer ${accessToken}`;
+    return axiosConfig;
   });
 
   const api = {
